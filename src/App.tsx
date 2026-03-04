@@ -104,6 +104,7 @@ export default function App() {
   const [isFullScreenClock, setIsFullScreenClock] = useState(false);
   const [isFullScreenFocus, setIsFullScreenFocus] = useState(false);
   const [isFullScreenStopwatch, setIsFullScreenStopwatch] = useState(false);
+  const [isFullScreenCountdown, setIsFullScreenCountdown] = useState(false);
 
   // Stopwatch State
   const [stopwatchTime, setStopwatchTime] = useState(0);
@@ -114,6 +115,7 @@ export default function App() {
   // Countdown State
   const [targetDate, setTargetDate] = useState<string>('');
   const [countdownRemaining, setCountdownRemaining] = useState<number>(0);
+  const [totalCountdownDuration, setTotalCountdownDuration] = useState<number>(0);
   const [isCountdownActive, setIsCountdownActive] = useState(false);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -226,6 +228,21 @@ export default function App() {
       animation.onfinish = () => confetti.remove();
     }
   };
+
+  const startCountdown = () => {
+    const now = Date.now();
+    const target = new Date(targetDate).getTime();
+    const diff = target - now;
+    if (diff > 0) {
+      setTotalCountdownDuration(diff);
+      setCountdownRemaining(diff);
+      setIsCountdownActive(true);
+    }
+  };
+
+  const countdownProgress = totalCountdownDuration > 0 
+    ? Math.max(0, Math.min(1, 1 - (countdownRemaining / totalCountdownDuration)))
+    : 0;
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -340,7 +357,7 @@ export default function App() {
             <div className="absolute top-6 right-6 flex gap-2">
               <button 
                 onClick={() => setIsFullScreenClock(true)}
-                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
+                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
                 title="Full Screen Display"
               >
                 <Maximize2 size={16} />
@@ -433,7 +450,7 @@ export default function App() {
             <div className="absolute top-6 right-6 flex gap-2">
               <button 
                 onClick={() => setIsFullScreenStopwatch(true)}
-                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
+                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
                 title="Full Screen Stopwatch"
               >
                 <Maximize2 size={16} />
@@ -559,7 +576,7 @@ export default function App() {
             <div className="absolute top-6 right-6 flex gap-2">
               <button 
                 onClick={() => setIsFullScreenFocus(true)}
-                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
+                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
                 title="Full Screen Focus"
               >
                 <Maximize2 size={16} />
@@ -664,7 +681,7 @@ export default function App() {
                     Focus Session
                   </motion.div>
                   
-                  <div className="relative w-[60vh] h-[60vh] mx-auto mb-12">
+                  <div className="relative w-[80vw] h-[80vw] max-w-[50vh] max-h-[50vh] mx-auto mb-12">
                     <svg className="w-full h-full -rotate-90">
                       <circle
                         cx="50%"
@@ -693,7 +710,7 @@ export default function App() {
                         key={focusRemaining}
                         initial={{ opacity: 0.8, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-[15vh] font-black font-mono text-glow"
+                        className="text-[10vh] md:text-[15vh] font-black font-mono text-glow"
                       >
                         {Math.floor(focusRemaining / 60).toString().padStart(2, '0')}:
                         {(focusRemaining % 60).toString().padStart(2, '0')}
@@ -726,6 +743,15 @@ export default function App() {
           
           {/* Smart Countdown Pro */}
           <Card title="Countdown Pro" icon={Bell}>
+            <div className="absolute top-6 right-6 flex gap-2">
+              <button 
+                onClick={() => setIsFullScreenCountdown(true)}
+                className="p-2 rounded-xl glass dark:glass-dark hover:scale-110 transition-transform lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
+                title="Full Screen Countdown"
+              >
+                <Maximize2 size={16} />
+              </button>
+            </div>
             <div className="space-y-6">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest opacity-40">Target Date & Time</label>
@@ -750,13 +776,13 @@ export default function App() {
                 <motion.div 
                   className="absolute inset-y-0 left-0 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                   initial={{ width: '0%' }}
-                  animate={{ width: isCountdownActive ? '100%' : '0%' }}
-                  transition={{ duration: 2 }}
+                  animate={{ width: `${countdownProgress * 100}%` }}
+                  transition={{ duration: 0.5 }}
                 />
               </div>
 
               <button 
-                onClick={() => setIsCountdownActive(!isCountdownActive)}
+                onClick={() => isCountdownActive ? setIsCountdownActive(false) : startCountdown()}
                 disabled={!targetDate}
                 className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isCountdownActive ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-white text-slate-950 shadow-xl'}`}
               >
@@ -764,6 +790,70 @@ export default function App() {
               </button>
             </div>
           </Card>
+
+          {/* Full Screen Countdown Overlay */}
+          <AnimatePresence>
+            {isFullScreenCountdown && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className={`fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 md:p-10 transition-colors duration-700 ${isDarkMode ? 'bg-slate-950/95' : 'bg-slate-50/95'} backdrop-blur-2xl`}
+              >
+                <div className={`fixed inset-0 animate-gradient opacity-20 pointer-events-none ${isDarkMode ? 'bg-gradient-to-br from-blue-900 via-slate-950 to-purple-900' : 'bg-gradient-to-br from-blue-100 via-slate-50 to-purple-100'}`} />
+                
+                <button 
+                  onClick={() => setIsFullScreenCountdown(false)}
+                  className="absolute top-6 right-6 md:top-10 md:right-10 p-4 rounded-2xl glass dark:glass-dark hover:scale-110 transition-transform z-10"
+                >
+                  <Minimize2 size={24} className="md:w-8 md:h-8" />
+                </button>
+
+                <div className="text-center relative z-10 w-full max-w-4xl">
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[10px] font-bold tracking-[0.4em] uppercase opacity-40 mb-12"
+                  >
+                    Countdown to Target
+                  </motion.div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12">
+                    {Object.entries(formatCountdown(countdownRemaining)).map(([unit, value], idx) => (
+                      <motion.div 
+                        key={unit}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + idx * 0.1 }}
+                        className="flex flex-col items-center p-6 md:p-10 rounded-[2rem] glass dark:glass-dark border border-white/5"
+                      >
+                        <div className="text-5xl md:text-8xl font-black font-mono mb-2 text-glow">{value.toString().padStart(2, '0')}</div>
+                        <div className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] opacity-40">{unit}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="relative h-3 bg-white/10 rounded-full overflow-hidden max-w-2xl mx-auto mb-12">
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                      initial={{ width: '0%' }}
+                      animate={{ width: `${countdownProgress * 100}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => isCountdownActive ? setIsCountdownActive(false) : startCountdown()}
+                    disabled={!targetDate}
+                    className={`px-12 py-5 rounded-3xl text-xl font-black uppercase tracking-widest transition-all disabled:opacity-30 ${isCountdownActive ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-white text-slate-950 shadow-2xl'}`}
+                  >
+                    {isCountdownActive ? 'Cancel' : 'Start Countdown'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* World Clock Dashboard */}
           <Card title="World Dashboard" icon={Globe}>
@@ -807,13 +897,6 @@ export default function App() {
           </p>
         </div>
       </footer>
-
-      {/* Floating Action Menu (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-6 right-6 z-50">
-        <button className="w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl shadow-blue-500/40 flex items-center justify-center">
-          <LayoutDashboard size={28} />
-        </button>
-      </div>
     </div>
   );
 }
