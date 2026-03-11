@@ -1,31 +1,29 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;900&family=JetBrains+Mono:wght@400;800&display=swap');
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Anton", sans-serif;
 }
 
 @layer base {
   body {
-    @apply transition-colors duration-500;
+    @apply transition-colors duration-500 bg-[#FFFF33] text-black;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)];
+  .brutal-card {
+    @apply bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
   }
   
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  .brutal-card-dark {
+    @apply bg-zinc-900 text-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
   }
 
-  .text-glow {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
-  }
-
-  .text-glow-blue {
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+  .text-brutal {
+    @apply font-black uppercase tracking-tighter;
   }
 }
 
